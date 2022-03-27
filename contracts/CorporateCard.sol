@@ -29,18 +29,35 @@ contract CorporateCard is Ownable {
     mapping(bytes32 => string) private groupNames;
     mapping(bytes32 => uint256) private totalGroupReceivers; // total of users to share billings
     mapping(address => Receiver) private receivers; // receiver addres mapping to paymentGroups
-    mapping(bytes32 => Billing[]) private billings; // group id mappint to array of payments value
+    mapping(bytes32 => Billing[]) public billings; // group id mappint to array of payments value
 
     constructor(address _factory, address _owner) {
         factory = _factory;
         transferOwnership(_owner);
     }
 
+    function getBillings(string memory paymentGroup)
+        public
+        view
+        returns (Billing[] memory)
+    {
+        bytes32 paymentGroupId = keccak256(abi.encodePacked(paymentGroup));
+        return billings[paymentGroupId];
+    }
+
     function balanceOf(address receiver) public view returns (uint256) {
         bytes32 paymentGroupId = receivers[receiver].paymentGroup;
         uint256 total = 0;
-        for (uint256 i = receivers[receiver].groupBlockIndex; i < billings[paymentGroupId].length; i++) {
-            total = total.add(billings[paymentGroupId][i].groupTotalSuply.div(billings[paymentGroupId][i].totalGroupReceivers));
+        for (
+            uint256 i = receivers[receiver].groupBlockIndex;
+            i < billings[paymentGroupId].length;
+            i++
+        ) {
+            total = total.add(
+                billings[paymentGroupId][i].groupTotalSuply.div(
+                    billings[paymentGroupId][i].totalGroupReceivers
+                )
+            );
         }
         return total - receivers[receiver].totalSpended;
     }
@@ -49,7 +66,9 @@ contract CorporateCard is Ownable {
         bytes32 paymentGroupId = keccak256(abi.encodePacked(paymentGroup));
         address tokenAddress = paymentGroups[paymentGroupId];
         uint256 tokenBalance = IERC20(tokenAddress).balanceOf(_msgSender());
-        uint256 groupCost = totalGroupReceivers[paymentGroupId].mul(paymentValues[tokenAddress]);
+        uint256 groupCost = totalGroupReceivers[paymentGroupId].mul(
+            paymentValues[tokenAddress]
+        );
         require(
             keccak256(abi.encodePacked(groupNames[paymentGroupId])) ==
                 paymentGroupId,
@@ -61,10 +80,9 @@ contract CorporateCard is Ownable {
             address(this),
             groupCost
         );
-        billings[paymentGroupId].push(Billing(
-            groupCost,
-            totalGroupReceivers[paymentGroupId]
-        ));
+        billings[paymentGroupId].push(
+            Billing(groupCost, totalGroupReceivers[paymentGroupId])
+        );
     }
 
     function addReceiver(address payable receiver, string memory paymentGroup)
@@ -87,7 +105,9 @@ contract CorporateCard is Ownable {
                 paymentGroupId,
             "A group with this name do not exists"
         );
-        totalGroupReceivers[paymentGroupId] = totalGroupReceivers[paymentGroupId].add(1);
+        totalGroupReceivers[paymentGroupId] = totalGroupReceivers[
+            paymentGroupId
+        ].add(1);
         receivers[receiver].paymentGroup = paymentGroupId;
         receivers[receiver].groupBlockIndex = groupBlockIndex;
     }
