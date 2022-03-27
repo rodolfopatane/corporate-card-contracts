@@ -9,11 +9,8 @@ contract CorporateFactory is Ownable {
     mapping(address => string[]) private corporateKeys;
     mapping(bytes32 => bool) private corporateAndKeysHash;
 
-    function createCorporateContract(string memory key)
-        public
-        returns (address)
-    {
-        CorporateCard corporateCard = new CorporateCard();
+    function createCorporateContract(string memory key) public {
+        CorporateCard corporateCard = new CorporateCard(address(this), _msgSender());
         corporates[_msgSender()][keccak256(abi.encodePacked(key))].push(
             address(corporateCard)
         );
@@ -22,14 +19,13 @@ contract CorporateFactory is Ownable {
             corporateKeys[_msgSender()].push(key);
             corporateAndKeysHash[corporateHash] = true;
         }
-        return address(corporateCard);
     }
 
-    function listMyCorporates() public view returns (string[] memory) {
+    function myCorporateKeys() public view returns (string[] memory) {
         return corporateKeys[_msgSender()];
     }
 
-    function listCardsByCorporateKey(string memory key)
+    function myCorporatesByKey(string memory key)
         public
         view
         returns (address[] memory)
