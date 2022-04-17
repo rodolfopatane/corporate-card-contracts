@@ -24,6 +24,7 @@ contract CorporateCard is Ownable {
     }
 
     address public factory;
+    string public name;
     mapping(address => uint256) private paymentValues; //StableCoin address mapping to value to pay
     mapping(bytes32 => address) private paymentGroups; // id group mapping to paymentValues id
     mapping(bytes32 => string) private groupNames;
@@ -31,8 +32,9 @@ contract CorporateCard is Ownable {
     mapping(address => Receiver) private receivers; // receiver addres mapping to paymentGroups
     mapping(bytes32 => Billing[]) public billings; // group id mappint to array of payments value
 
-    constructor(address _factory, address _owner) {
+    constructor(address _factory, address _owner, string memory _name) {
         factory = _factory;
+        name = _name;
         transferOwnership(_owner);
     }
 

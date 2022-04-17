@@ -5,31 +5,42 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./CorporateCard.sol";
 
 contract CorporateFactory is Ownable {
-    mapping(address => mapping(bytes32 => address[])) private corporates;
-    mapping(address => string[]) private corporateKeys;
-    mapping(bytes32 => bool) private corporateAndKeysHash;
+    mapping(address => mapping(bytes32 => address[])) private contracts;
+    mapping(address => string[]) private groups;
+    mapping(bytes32 => bool) private listOfExistsGroup;
 
-    function createCorporateContract(string memory key) public {
-        CorporateCard corporateCard = new CorporateCard(address(this), _msgSender());
-        corporates[_msgSender()][keccak256(abi.encodePacked(key))].push(
+    function createContract(string memory name, string memory groupName)
+        public
+    {
+        CorporateCard corporateCard = new CorporateCard(
+            address(this),
+            _msgSender(),
+            name
+        );
+
+        bytes32 groupHash = keccak256(
+            abi.encodePacked(_msgSender(), groupName)
+        );
+
+        if (!listOfExistsGroup[groupHash]) {
+            groups[_msgSender()].push(groupName);
+            listOfExistsGroup[groupHash] = true;
+        }
+
+        contracts[_msgSender()][keccak256(abi.encodePacked(groupName))].push(
             address(corporateCard)
         );
-        bytes32 corporateHash = keccak256(abi.encodePacked(_msgSender(), key));
-        if (!corporateAndKeysHash[corporateHash]) {
-            corporateKeys[_msgSender()].push(key);
-            corporateAndKeysHash[corporateHash] = true;
-        }
     }
 
-    function myCorporateKeys() public view returns (string[] memory) {
-        return corporateKeys[_msgSender()];
+    function myGroups() public view returns (string[] memory) {
+        return groups[_msgSender()];
     }
 
-    function myCorporatesByKey(string memory key)
+    function myContractsByGoup(string memory groupName)
         public
         view
         returns (address[] memory)
     {
-        return corporates[_msgSender()][keccak256(abi.encodePacked(key))];
+        return contracts[_msgSender()][keccak256(abi.encodePacked(groupName))];
     }
 }
